@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RegistrationAPI.App.Interfaces;
 using RegistrationAPI.Domain.Entities;
 
 namespace Infra;
-public class AppDbContext(DbContextOptions<AppDbContext> opts) : DbContext(opts)
+public class AppDbContext(DbContextOptions<AppDbContext> opts) : DbContext(opts), IAppDbContext
 {
     public DbSet<PolicyHolder> PolicyHolders => Set<PolicyHolder>();
 

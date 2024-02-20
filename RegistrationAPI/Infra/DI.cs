@@ -2,18 +2,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RegistrationAPI.App.Interfaces;
 
 namespace Infra;
 
 public static class DI
-{
-    // Methods requires to wire this up in the WebProj
+{    
     public static IServiceCollection AddInfra(this IServiceCollection services, IConfiguration configuration)
     {
-        // Get From Web Proj Later
+        services.AddSingleton(TimeProvider.System);
+
         var connString = configuration.GetConnectionString("Default");
 
         services.AddDbContext<AppDbContext>(opts => opts.UseSqlite(connString));
+        services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<AppDbContext>());
 
         return services;
     }
