@@ -1,3 +1,3 @@
 ### AFI Registration API
 
-Testing branch protections
+Applied to admins now. :)
