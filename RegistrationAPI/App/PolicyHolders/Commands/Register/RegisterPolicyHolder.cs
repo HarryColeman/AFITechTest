@@ -16,10 +16,10 @@ public class RegisterPolicyHolderCommandValidator : AbstractValidator<RegisterPo
 {
     private readonly IAppDbContext _ctx;
 
-    public RegisterPolicyHolderCommandValidator(IAppDbContext _ctx)
+    public RegisterPolicyHolderCommandValidator(IAppDbContext ctx)
     {
         // Inject for any database checks - unique email maybe?
-        this._ctx = _ctx;
+        _ctx = ctx;
 
         // Basic vali for now, return to this
         RuleFor(v => v.FirstName).NotEmpty();

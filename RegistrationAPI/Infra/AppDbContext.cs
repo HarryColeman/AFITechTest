@@ -1,13 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RegistrationAPI.Domain.Entities;
 
 namespace Infra;
-public class AppDbContext : DbContext
+public class AppDbContext(DbContextOptions<AppDbContext> opts) : DbContext(opts)
 {
-    public AppDbContext(DbContextOptions<AppDbContext> opts) : base(opts) { }
+    public DbSet<PolicyHolder> PolicyHolders => Set<PolicyHolder>();
 
-    // Need to pull domain through App
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.Entity<PolicyHolder>().HasKey(ph => ph.Id);
+        builder.Entity<PolicyHolder>().Property(ph => ph.FirstName).IsRequired().HasMaxLength(50);
+        builder.Entity<PolicyHolder>().Property(ph => ph.LastName).IsRequired().HasMaxLength(50);
+        builder.Entity<PolicyHolder>().Property(ph => ph.PolicyReferenceNumber).IsRequired().HasMaxLength(9);
+
         base.OnModelCreating(builder);
     }
 }
