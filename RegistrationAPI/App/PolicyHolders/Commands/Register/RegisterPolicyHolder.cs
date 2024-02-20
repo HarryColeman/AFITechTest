@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using RegistrationAPI.App.Interfaces;
 using RegistrationAPI.Domain.Entities;
 
@@ -15,16 +16,34 @@ public record RegisterPolicyHolderCommand
 public class RegisterPolicyHolderCommandValidator : AbstractValidator<RegisterPolicyHolderCommand>
 {
     private readonly IAppDbContext _ctx;
+    private readonly TimeProvider _timeProvider;
 
-    public RegisterPolicyHolderCommandValidator(IAppDbContext ctx)
+    public RegisterPolicyHolderCommandValidator(IAppDbContext ctx, TimeProvider timeProvider)
     {
         // Inject for any database checks - unique email maybe?
         _ctx = ctx;
+        _timeProvider = timeProvider;
 
-        // Basic vali for now, return to this
-        RuleFor(v => v.FirstName).NotEmpty();
-        RuleFor(v => v.LastName).NotEmpty();
+        RuleFor(ph => ph.FirstName).NotEmpty().MinimumLength(3).MaximumLength(50);
+        RuleFor(ph => ph.LastName).NotEmpty().MinimumLength(3).MaximumLength(50);
+
+        // There's a way to have this generated properly - rather than a literal string! Look up if time.
+        RuleFor(ph => ph.PolicyReferenceNumber).Length(9).Matches("[A-Z]{2}-\\d{6}");
+        RuleFor(ph => ph.PolicyReferenceNumber).MustAsync(BeUnique).WithMessage("'{PropertyName}' must be unique.").WithErrorCode("Unique");
+
+        // Enforce either Email or DOB
+        When(ph => !ph.DateOfBirth.HasValue, 
+            () => RuleFor(ph => ph.PolicyHoldersEmail)
+            .NotEmpty()
+            //4+ AN - @ - 2+ AN - .com/.co.uk
+            .Matches("[A-Za-z0-9]{4,}@([A-Za-z0-9]{2,}\\.)?(com|co\\.uk)"));
+        
+        When(ph => string.IsNullOrEmpty(ph.PolicyHoldersEmail), () => RuleFor(ph => ph.DateOfBirth).NotNull().Must(ph => BeAtLeastEighteen(ph!.Value)));                
     }
+
+    public async Task<bool> BeUnique(string referenceNumber, CancellationToken ct) => await _ctx.PolicyHolders.AllAsync(u => u.PolicyReferenceNumber != referenceNumber, ct);
+
+    public bool BeAtLeastEighteen(DateOnly dob) => dob.AddYears(18) <= DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
 }
 
 public class RegisterPolicyHolderCommandHandler(IAppDbContext ctx, IValidator<RegisterPolicyHolderCommand> validator)
