@@ -32,7 +32,7 @@ public class RegisterPolicyHolderCommandHandler(IAppDbContext ctx, IValidator<Re
     private readonly IAppDbContext _ctx = ctx;
     private readonly IValidator<RegisterPolicyHolderCommand> _validator = validator;
 
-    public async Task<int> Handler(RegisterPolicyHolderCommand command, CancellationToken ct)
+    public async Task<int> Handle(RegisterPolicyHolderCommand command, CancellationToken ct)
     {
         await _validator.ValidateAndThrowAsync(command, ct);
 
