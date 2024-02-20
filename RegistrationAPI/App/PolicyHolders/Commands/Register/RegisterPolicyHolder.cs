@@ -19,7 +19,7 @@ public class RegisterPolicyHolderCommandValidator : AbstractValidator<RegisterPo
     private readonly TimeProvider _timeProvider;
 
     public RegisterPolicyHolderCommandValidator(IAppDbContext ctx, TimeProvider timeProvider)
-    {        
+    {
         _ctx = ctx;
         _timeProvider = timeProvider;
 
@@ -31,16 +31,21 @@ public class RegisterPolicyHolderCommandValidator : AbstractValidator<RegisterPo
         RuleFor(ph => ph.PolicyReferenceNumber).MustAsync(BeUnique).WithMessage("'{PropertyName}' must be unique.").WithErrorCode("Unique");
 
         // Enforce either Email or DOB
-        When(ph => !ph.DateOfBirth.HasValue, 
+        When(ph => !ph.DateOfBirth.HasValue && string.IsNullOrEmpty(ph.PolicyHoldersEmail),
+            () => RuleFor(ph => ph.PolicyHoldersEmail)
+            .Must(_ => false).WithMessage("Please provide either a 'Policy Holders Email' or 'Date Of Birth'"));
+
+        When(ph => !string.IsNullOrEmpty(ph.PolicyHoldersEmail),
             () => RuleFor(ph => ph.PolicyHoldersEmail)
             .NotEmpty()
             //4+ AN - @ - 2+ AN - .com/.co.uk
             .Matches("[A-Za-z0-9]{4,}@([A-Za-z0-9]{2,}\\.)?(com|co\\.uk)"));
-        
-        When(ph => string.IsNullOrEmpty(ph.PolicyHoldersEmail), 
+
+        When(ph => ph.DateOfBirth.HasValue,
             () => RuleFor(ph => ph.DateOfBirth)
             .NotNull()
-            .Must(ph => BeAtLeastEighteen(ph!.Value)));                
+            .Must(ph => ph.HasValue && BeAtLeastEighteen(ph!.Value))
+            .WithMessage("Policy Holder must be at least eighteen years old.").WithErrorCode("MinimumAge"));
     }
 
     public async Task<bool> BeUnique(string referenceNumber, CancellationToken ct) => await _ctx.PolicyHolders.AllAsync(u => u.PolicyReferenceNumber != referenceNumber, ct);
