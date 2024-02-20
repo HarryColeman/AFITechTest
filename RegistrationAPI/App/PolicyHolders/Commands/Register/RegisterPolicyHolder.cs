@@ -19,8 +19,7 @@ public class RegisterPolicyHolderCommandValidator : AbstractValidator<RegisterPo
     private readonly TimeProvider _timeProvider;
 
     public RegisterPolicyHolderCommandValidator(IAppDbContext ctx, TimeProvider timeProvider)
-    {
-        // Inject for any database checks - unique email maybe?
+    {        
         _ctx = ctx;
         _timeProvider = timeProvider;
 
@@ -38,7 +37,10 @@ public class RegisterPolicyHolderCommandValidator : AbstractValidator<RegisterPo
             //4+ AN - @ - 2+ AN - .com/.co.uk
             .Matches("[A-Za-z0-9]{4,}@([A-Za-z0-9]{2,}\\.)?(com|co\\.uk)"));
         
-        When(ph => string.IsNullOrEmpty(ph.PolicyHoldersEmail), () => RuleFor(ph => ph.DateOfBirth).NotNull().Must(ph => BeAtLeastEighteen(ph!.Value)));                
+        When(ph => string.IsNullOrEmpty(ph.PolicyHoldersEmail), 
+            () => RuleFor(ph => ph.DateOfBirth)
+            .NotNull()
+            .Must(ph => BeAtLeastEighteen(ph!.Value)));                
     }
 
     public async Task<bool> BeUnique(string referenceNumber, CancellationToken ct) => await _ctx.PolicyHolders.AllAsync(u => u.PolicyReferenceNumber != referenceNumber, ct);
