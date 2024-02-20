@@ -12,7 +12,7 @@ public class CustomExceptionHandler : IExceptionHandler
     {
         _handlers = new()
         {
-            { typeof(ValidationException), HandleValidationException) }
+            { typeof(ValidationException), HandleValidationException }
         };
     }
 
@@ -44,7 +44,7 @@ public class CustomExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(new ValidationProblemDetails(mappedErrors)
         {
             Status = StatusCodes.Status400BadRequest,
-            Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+            Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
         });
     }
 }
